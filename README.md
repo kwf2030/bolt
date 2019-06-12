@@ -1,2 +1,2 @@
 # bolt
-bbolt简单封装
+[bbolt](https://github.com/etcd-io/bbolt)简单封装。
