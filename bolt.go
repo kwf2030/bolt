@@ -2,34 +2,36 @@ package bolt
 
 import (
   "bytes"
-  "errors"
   "os"
 
+  "github.com/kwf2030/commons/base"
   "go.etcd.io/bbolt"
 )
 
 var (
-  ErrInvalidArgs    = errors.New("invalid args")
-  ErrBucketNotFound = errors.New("bucket not found")
-  ErrKeyNotFound    = errors.New("key not found")
+  ErrBucketNotFound = base.NewException(0xF001, "bucket not found")
+  ErrKeyNotFound    = base.NewException(0xF002, "key not found")
 )
 
-type Store struct {
-  DB *bbolt.DB
+type DBWrapper struct {
+  *bbolt.DB
 }
 
-func Open(path string, buckets ...string) (*Store, error) {
+func OpenWith(path string, buckets ...string) (*DBWrapper, error) {
+  if path == "" {
+    return nil, base.ErrInvalidArgs
+  }
   db, e := bbolt.Open(path, os.ModePerm, nil)
   if e != nil {
     return nil, e
   }
   if len(buckets) > 0 {
     e = db.Update(func(tx *bbolt.Tx) error {
-      for _, v := range buckets {
-        if v == "" {
+      for _, bucket := range buckets {
+        if bucket == "" {
           continue
         }
-        _, e := tx.CreateBucketIfNotExists([]byte(v))
+        _, e := tx.CreateBucketIfNotExists([]byte(bucket))
         if e != nil {
           return e
         }
@@ -40,69 +42,69 @@ func Open(path string, buckets ...string) (*Store, error) {
       return nil, e
     }
   }
-  return &Store{DB: db}, nil
+  return &DBWrapper{DB: db}, nil
 }
 
-func (s *Store) Close() error {
-  return s.DB.Close()
-}
-
-func (s *Store) QueryAndUpdateV(bucket, k []byte, f func(k, v []byte, n int) ([]byte, error)) error {
+func (w *DBWrapper) QueryAndUpdateV(bucket, k []byte, f func([]byte) ([]byte, error)) error {
   if bucket == nil || k == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.Update(func(tx *bbolt.Tx) error {
+  return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
     }
-    ov := b.Get(k)
-    if ov == nil {
+    old := b.Get(k)
+    if old == nil {
       return ErrKeyNotFound
     }
-    nv, e := f(k, ov, b.Stats().KeyN)
+    val, e := f(old)
     if e != nil {
       return e
     }
-    if nv != nil {
-      return b.Put(k, nv)
+    if val != nil {
+      return b.Put(k, val)
     }
     return nil
   })
 }
 
-func (s *Store) QueryAndUpdateVPrefix(bucket, prefix []byte, f func(k, v []byte, n int) ([]byte, error)) error {
+func (w *DBWrapper) QueryAndUpdateVPrefix(bucket, prefix []byte, f func([]byte) ([]byte, error)) error {
   if bucket == nil || prefix == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.Update(func(tx *bbolt.Tx) error {
+  return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
     }
-    n := b.Stats().KeyN
+    var e error
     c := b.Cursor()
     for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
       if !bytes.HasPrefix(k, prefix) {
         break
       }
-      nv, e := f(k, v, n)
+      var val []byte
+      val, e = f(v)
       if e != nil {
         return e
       }
-      if nv != nil {
-        return b.Put(k, nv)
+      if val != nil {
+        e = b.Put(k, val)
+        if e != nil {
+          return e
+        }
       }
     }
     return nil
   })
 }
 
-func (s *Store) UpdateV(bucket, k, v []byte) error {
+func (w *DBWrapper) UpdateV(bucket, k, v []byte) error {
   if bucket == nil || k == nil || v == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.Update(func(tx *bbolt.Tx) error {
+  return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -111,11 +113,11 @@ func (s *Store) UpdateV(bucket, k, v []byte) error {
   })
 }
 
-func (s *Store) UpdateB(bucket []byte, f func(b *bbolt.Bucket) error) error {
+func (w *DBWrapper) UpdateB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.Update(func(tx *bbolt.Tx) error {
+  return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -124,19 +126,19 @@ func (s *Store) UpdateB(bucket []byte, f func(b *bbolt.Bucket) error) error {
   })
 }
 
-func (s *Store) Update(f func(tx *bbolt.Tx) error) error {
+func (w *DBWrapper) Update(f func(*bbolt.Tx) error) error {
   if f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.Update(f)
+  return w.DB.Update(f)
 }
 
-func (s *Store) Get(bucket, k []byte) []byte {
+func (w *DBWrapper) Get(bucket, k []byte) []byte {
   if bucket == nil || k == nil {
     return nil
   }
   var ret []byte
-  e := s.DB.View(func(tx *bbolt.Tx) error {
+  e := w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -155,11 +157,11 @@ func (s *Store) Get(bucket, k []byte) []byte {
   return ret
 }
 
-func (s *Store) QueryV(bucket, k []byte, f func(k, v []byte, n int) error) error {
+func (w *DBWrapper) QueryV(bucket, k []byte, f func([]byte) error) error {
   if bucket == nil || k == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(func(tx *bbolt.Tx) error {
+  return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -168,15 +170,15 @@ func (s *Store) QueryV(bucket, k []byte, f func(k, v []byte, n int) error) error
     if v == nil {
       return ErrKeyNotFound
     }
-    return f(k, v, b.Stats().KeyN)
+    return f(v)
   })
 }
 
-func (s *Store) QueryB(bucket []byte, f func(b *bbolt.Bucket) error) error {
+func (w *DBWrapper) QueryB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(func(tx *bbolt.Tx) error {
+  return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -185,26 +187,26 @@ func (s *Store) QueryB(bucket []byte, f func(b *bbolt.Bucket) error) error {
   })
 }
 
-func (s *Store) Query(f func(tx *bbolt.Tx) error) error {
+func (w *DBWrapper) Query(f func(*bbolt.Tx) error) error {
   if f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(f)
+  return w.DB.View(f)
 }
 
-func (s *Store) EachKV(bucket []byte, f func(k, v []byte, n int) error) error {
+func (w *DBWrapper) EachKV(bucket []byte, f func([]byte, []byte) error) error {
   if bucket == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(func(tx *bbolt.Tx) error {
+  return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
     }
-    n := b.Stats().KeyN
+    var e error
     c := b.Cursor()
     for k, v := c.First(); k != nil; k, v = c.Next() {
-      if e := f(k, v, n); e != nil {
+      if e = f(k, v); e != nil {
         return e
       }
     }
@@ -212,22 +214,22 @@ func (s *Store) EachKV(bucket []byte, f func(k, v []byte, n int) error) error {
   })
 }
 
-func (s *Store) EachKVPrefix(bucket, prefix []byte, f func(k, v []byte, n int) error) error {
+func (w *DBWrapper) EachKVPrefix(bucket, prefix []byte, f func([]byte, []byte) error) error {
   if bucket == nil || prefix == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(func(tx *bbolt.Tx) error {
+  return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
     }
-    n := b.Stats().KeyN
+    var e error
     c := b.Cursor()
     for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
       if !bytes.HasPrefix(k, prefix) {
         break
       }
-      if e := f(k, v, n); e != nil {
+      if e = f(k, v); e != nil {
         return e
       }
     }
@@ -235,11 +237,11 @@ func (s *Store) EachKVPrefix(bucket, prefix []byte, f func(k, v []byte, n int) e
   })
 }
 
-func (s *Store) EachB(bucket []byte, f func(b *bbolt.Bucket) error) error {
+func (w *DBWrapper) EachB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return ErrInvalidArgs
+    return base.ErrInvalidArgs
   }
-  return s.DB.View(func(tx *bbolt.Tx) error {
+  return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -248,12 +250,12 @@ func (s *Store) EachB(bucket []byte, f func(b *bbolt.Bucket) error) error {
   })
 }
 
-func (s *Store) CountKV(bucket []byte) (int, error) {
+func (w *DBWrapper) CountKV(bucket []byte) (int, error) {
   if bucket == nil {
-    return 0, ErrInvalidArgs
+    return 0, base.ErrInvalidArgs
   }
   n := 0
-  e := s.DB.View(func(tx *bbolt.Tx) error {
+  e := w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
@@ -267,12 +269,12 @@ func (s *Store) CountKV(bucket []byte) (int, error) {
   return n, nil
 }
 
-func (s *Store) CountKVPrefix(bucket, prefix []byte) (int, error) {
+func (w *DBWrapper) CountKVPrefix(bucket, prefix []byte) (int, error) {
   if bucket == nil {
-    return 0, ErrInvalidArgs
+    return 0, base.ErrInvalidArgs
   }
   n := 0
-  e := s.DB.View(func(tx *bbolt.Tx) error {
+  e := w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
     if b == nil {
       return ErrBucketNotFound
