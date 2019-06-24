@@ -1,6 +1,0 @@
-github.com/kwf2030/commons v0.0.0-20190624061907-1f8cd9c10ea9 h1:6XEyB+j1MwVhj0Vsu4bM7ytD8AZlICKI8LK7N4a21mU=
-github.com/kwf2030/commons v0.0.0-20190624061907-1f8cd9c10ea9/go.mod h1:G2aEEgqDDg+eUhA5XoEbfINyxorLxOJVBrN8EurWAS0=
-go.etcd.io/bbolt v1.3.3 h1:MUGmc65QhB3pIlaQ5bB4LwqSj6GIonVJXpZiaKNyaKk=
-go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
-golang.org/x/sys v0.0.0-20190621203818-d432491b9138 h1:t8BZD9RDjkm9/h7yYN6kE8oaeov5r9aztkB7zKA5Tkg=
-golang.org/x/sys v0.0.0-20190621203818-d432491b9138/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

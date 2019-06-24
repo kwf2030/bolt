@@ -2,6 +2,7 @@ package bolt
 
 import (
   "bytes"
+  "errors"
   "os"
 
   "github.com/kwf2030/commons/base"
@@ -9,8 +10,8 @@ import (
 )
 
 var (
-  ErrBucketNotFound = base.NewException(0xF001, "bucket not found")
-  ErrKeyNotFound    = base.NewException(0xF002, "key not found")
+  ErrBucketNotFound = errors.New("bucket not found")
+  ErrKeyNotFound    = errors.New("key not found")
 )
 
 type DBWrapper struct {
