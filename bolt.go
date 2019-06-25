@@ -20,7 +20,7 @@ type DBWrapper struct {
 
 func OpenWith(path string, buckets ...string) (*DBWrapper, error) {
   if path == "" {
-    return nil, base.ErrInvalidArgs
+    return nil, base.ErrInvalidArgument
   }
   db, e := bbolt.Open(path, os.ModePerm, nil)
   if e != nil {
@@ -48,7 +48,7 @@ func OpenWith(path string, buckets ...string) (*DBWrapper, error) {
 
 func (w *DBWrapper) QueryAndUpdateV(bucket, k []byte, f func([]byte) ([]byte, error)) error {
   if bucket == nil || k == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -72,7 +72,7 @@ func (w *DBWrapper) QueryAndUpdateV(bucket, k []byte, f func([]byte) ([]byte, er
 
 func (w *DBWrapper) QueryAndUpdateVPrefix(bucket, prefix []byte, f func([]byte) ([]byte, error)) error {
   if bucket == nil || prefix == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -103,7 +103,7 @@ func (w *DBWrapper) QueryAndUpdateVPrefix(bucket, prefix []byte, f func([]byte) 
 
 func (w *DBWrapper) UpdateV(bucket, k, v []byte) error {
   if bucket == nil || k == nil || v == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -116,7 +116,7 @@ func (w *DBWrapper) UpdateV(bucket, k, v []byte) error {
 
 func (w *DBWrapper) UpdateB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.Update(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -129,7 +129,7 @@ func (w *DBWrapper) UpdateB(bucket []byte, f func(*bbolt.Bucket) error) error {
 
 func (w *DBWrapper) Update(f func(*bbolt.Tx) error) error {
   if f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.Update(f)
 }
@@ -160,7 +160,7 @@ func (w *DBWrapper) Get(bucket, k []byte) []byte {
 
 func (w *DBWrapper) QueryV(bucket, k []byte, f func([]byte) error) error {
   if bucket == nil || k == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -177,7 +177,7 @@ func (w *DBWrapper) QueryV(bucket, k []byte, f func([]byte) error) error {
 
 func (w *DBWrapper) QueryB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -190,14 +190,14 @@ func (w *DBWrapper) QueryB(bucket []byte, f func(*bbolt.Bucket) error) error {
 
 func (w *DBWrapper) Query(f func(*bbolt.Tx) error) error {
   if f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(f)
 }
 
 func (w *DBWrapper) EachKV(bucket []byte, f func([]byte, []byte) error) error {
   if bucket == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -217,7 +217,7 @@ func (w *DBWrapper) EachKV(bucket []byte, f func([]byte, []byte) error) error {
 
 func (w *DBWrapper) EachKVPrefix(bucket, prefix []byte, f func([]byte, []byte) error) error {
   if bucket == nil || prefix == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -240,7 +240,7 @@ func (w *DBWrapper) EachKVPrefix(bucket, prefix []byte, f func([]byte, []byte) e
 
 func (w *DBWrapper) EachB(bucket []byte, f func(*bbolt.Bucket) error) error {
   if bucket == nil || f == nil {
-    return base.ErrInvalidArgs
+    return base.ErrInvalidArgument
   }
   return w.DB.View(func(tx *bbolt.Tx) error {
     b := tx.Bucket(bucket)
@@ -253,7 +253,7 @@ func (w *DBWrapper) EachB(bucket []byte, f func(*bbolt.Bucket) error) error {
 
 func (w *DBWrapper) CountKV(bucket []byte) (int, error) {
   if bucket == nil {
-    return 0, base.ErrInvalidArgs
+    return 0, base.ErrInvalidArgument
   }
   n := 0
   e := w.DB.View(func(tx *bbolt.Tx) error {
@@ -272,7 +272,7 @@ func (w *DBWrapper) CountKV(bucket []byte) (int, error) {
 
 func (w *DBWrapper) CountKVPrefix(bucket, prefix []byte) (int, error) {
   if bucket == nil {
-    return 0, base.ErrInvalidArgs
+    return 0, base.ErrInvalidArgument
   }
   n := 0
   e := w.DB.View(func(tx *bbolt.Tx) error {
