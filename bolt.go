@@ -14,7 +14,7 @@ var (
   ErrKeyNotFound    = errors.New("key not found")
 )
 
-func Open(path string, buckets ...string) (*bbolt.DB, error) {
+func Open(path string, buckets ...[]byte) (*bbolt.DB, error) {
   if path == "" {
     return nil, base.ErrInvalidArgument
   }
@@ -25,10 +25,10 @@ func Open(path string, buckets ...string) (*bbolt.DB, error) {
   if len(buckets) > 0 {
     e = db.Update(func(tx *bbolt.Tx) error {
       for _, bucket := range buckets {
-        if bucket == "" {
+        if len(bucket) == 0 {
           continue
         }
-        _, e := tx.CreateBucketIfNotExists([]byte(bucket))
+        _, e := tx.CreateBucketIfNotExists(bucket)
         if e != nil {
           return e
         }
