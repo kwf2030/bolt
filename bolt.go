@@ -119,35 +119,6 @@ func PutWithValue(db *bbolt.DB, bucket, key []byte, fun func([]byte) ([]byte, er
   })
 }
 
-func PutWithValuePrefix(db *bbolt.DB, bucket, prefix []byte, fun func([]byte) ([]byte, error)) error {
-  if db == nil || len(bucket) == 0 || len(prefix) == 0 || fun == nil {
-    return base.ErrInvalidArgument
-  }
-  return db.Update(func(tx *bbolt.Tx) error {
-    b := tx.Bucket(bucket)
-    if b == nil {
-      return ErrBucketNotFound
-    }
-    c := b.Cursor()
-    for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
-      if !bytes.HasPrefix(k, prefix) {
-        break
-      }
-      newVal, e := fun(v)
-      if e != nil {
-        return e
-      }
-      if newVal != nil {
-        e = b.Put(k, newVal)
-        if e != nil {
-          return e
-        }
-      }
-    }
-    return nil
-  })
-}
-
 func GetWithBucket(db *bbolt.DB, bucket []byte, fun func(*bbolt.Bucket) error) error {
   if db == nil || len(bucket) == 0 || fun == nil {
     return base.ErrInvalidArgument
@@ -188,7 +159,7 @@ func PutWithDB(db *bbolt.DB, fun func(*bbolt.Tx) error) error {
   return db.Update(fun)
 }
 
-func EachKV(db *bbolt.DB, bucket []byte, fun func([]byte, []byte) error) error {
+func EachWithKV(db *bbolt.DB, bucket []byte, fun func([]byte, []byte) error) error {
   if db == nil || len(bucket) == 0 || fun == nil {
     return base.ErrInvalidArgument
   }
@@ -207,29 +178,7 @@ func EachKV(db *bbolt.DB, bucket []byte, fun func([]byte, []byte) error) error {
   })
 }
 
-func EachKVPrefix(db *bbolt.DB, bucket, prefix []byte, fun func([]byte, []byte) error) error {
-  if db == nil || len(bucket) == 0 || len(prefix) == 0 || fun == nil {
-    return base.ErrInvalidArgument
-  }
-  return db.View(func(tx *bbolt.Tx) error {
-    b := tx.Bucket(bucket)
-    if b == nil {
-      return ErrBucketNotFound
-    }
-    c := b.Cursor()
-    for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
-      if !bytes.HasPrefix(k, prefix) {
-        break
-      }
-      if e := fun(k, v); e != nil {
-        return e
-      }
-    }
-    return nil
-  })
-}
-
-func EachBucket(db *bbolt.DB, bucket []byte, fun func(*bbolt.Bucket) error) error {
+func EachWithBucket(db *bbolt.DB, bucket []byte, fun func(*bbolt.Bucket) error) error {
   if db == nil || len(bucket) == 0 || fun == nil {
     return base.ErrInvalidArgument
   }
@@ -284,4 +233,55 @@ func CountKVPrefix(db *bbolt.DB, bucket, prefix []byte) (int, error) {
     return 0, e
   }
   return ret, nil
+}
+
+func GetWithKVPrefix(db *bbolt.DB, bucket, prefix []byte, fun func([]byte, []byte) error) error {
+  if db == nil || len(bucket) == 0 || len(prefix) == 0 || fun == nil {
+    return base.ErrInvalidArgument
+  }
+  return db.View(func(tx *bbolt.Tx) error {
+    b := tx.Bucket(bucket)
+    if b == nil {
+      return ErrBucketNotFound
+    }
+    c := b.Cursor()
+    for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
+      if !bytes.HasPrefix(k, prefix) {
+        break
+      }
+      if e := fun(k, v); e != nil {
+        return e
+      }
+    }
+    return nil
+  })
+}
+
+func PutWithKVPrefix(db *bbolt.DB, bucket, prefix []byte, fun func([]byte, []byte) ([]byte, error)) error {
+  if db == nil || len(bucket) == 0 || len(prefix) == 0 || fun == nil {
+    return base.ErrInvalidArgument
+  }
+  return db.Update(func(tx *bbolt.Tx) error {
+    b := tx.Bucket(bucket)
+    if b == nil {
+      return ErrBucketNotFound
+    }
+    c := b.Cursor()
+    for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
+      if !bytes.HasPrefix(k, prefix) {
+        break
+      }
+      newVal, e := fun(k, v)
+      if e != nil {
+        return e
+      }
+      if newVal != nil {
+        e = b.Put(k, newVal)
+        if e != nil {
+          return e
+        }
+      }
+    }
+    return nil
+  })
 }
