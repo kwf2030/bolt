@@ -1,5 +1,3 @@
-github.com/kwf2030/commons v1.0.0 h1:bmKGqTJoAjiswAhA+dGYxuMLA5sQblV7g689MAwrizk=
-github.com/kwf2030/commons v1.0.0/go.mod h1:yFGzJxUs9MNDzpKIWrvb8HIgtZzj87klI8XcDIyzoWw=
 github.com/kwf2030/commons v1.1.0 h1:k/68/cACXotkAVL6AULTPogCzA2zdTzDnv2ejlvBPPs=
 github.com/kwf2030/commons v1.1.0/go.mod h1:yFGzJxUs9MNDzpKIWrvb8HIgtZzj87klI8XcDIyzoWw=
 go.etcd.io/bbolt v1.3.3 h1:MUGmc65QhB3pIlaQ5bB4LwqSj6GIonVJXpZiaKNyaKk=
