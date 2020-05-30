@@ -1,6 +1,6 @@
-github.com/kwf2030/commons v1.2.1 h1:esf/Hc30NtAQ/rZBQqcUT84nb2R1sWXiFIRvUmU/vIQ=
-github.com/kwf2030/commons v1.2.1/go.mod h1:yFGzJxUs9MNDzpKIWrvb8HIgtZzj87klI8XcDIyzoWw=
-go.etcd.io/bbolt v1.3.3 h1:MUGmc65QhB3pIlaQ5bB4LwqSj6GIonVJXpZiaKNyaKk=
-go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
-golang.org/x/sys v0.0.0-20191007154456-ef33b2fb2c41 h1:OC2BiV9nQHWgVMNbxZ5/eZKWnnd3Z4H9W5zdNvC4EBc=
-golang.org/x/sys v0.0.0-20191007154456-ef33b2fb2c41/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+github.com/kwf2030/commons v1.2.2 h1:yBmSOmgB0vGJcqOPXu1a0Kz3w4d+KIYIo9fdGBu+aIU=
+github.com/kwf2030/commons v1.2.2/go.mod h1:bHtelk0wXlE9D5S5296Qr9D6socTOZ8xw9KCiVW9Ee4=
+go.etcd.io/bbolt v1.3.4 h1:hi1bXHMVrlQh6WwxAy+qZCV/SYIlqo+Ushwdpa4tAKg=
+go.etcd.io/bbolt v1.3.4/go.mod h1:G5EMThwa9y8QZGBClrRx5EY+Yw9kAhnjy3bSjsnlVTQ=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 h1:LfCXLvNmTYH9kEmVgqbnsWfruoXZIrh4YBgqVHtDvw0=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
